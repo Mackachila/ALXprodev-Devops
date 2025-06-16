@@ -24,3 +24,41 @@ for name in "${pokemon_list[@]}"; do
     # Sleep for 1 second to avoid rate limiting
     sleep 1
 done
+
+
+#!/bin/bash
+
+OUTPUT_DIR="pokemon_data"
+LOG_FILE="errors.txt"
+mkdir -p "$OUTPUT_DIR"
+> "$LOG_FILE"  # clear log file
+
+pokemon_list=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+
+for name in "${pokemon_list[@]}"; do
+    echo "Fetching data for $name..."
+    attempt=1
+    success=0
+
+    while [ $attempt -le 3 ]; do
+        response=$(curl -s -w "%{http_code}" -o "$OUTPUT_DIR/$name.json" "https://pokeapi.co/api/v2/pokemon/$name")
+
+        if [ "$response" -eq 200 ]; then
+            echo "Saved data to $OUTPUT_DIR/$name.json ✅"
+            success=1
+            break
+        else
+            echo "Attempt $attempt failed for $name (HTTP $response)"
+            ((attempt++))
+            sleep 1
+        fi
+    done
+
+    if [ $success -eq 0 ]; then
+        echo "Failed to fetch data for $name after 3 attempts ❌" | tee -a "$LOG_FILE"
+        rm -f "$OUTPUT_DIR/$name.json"
+    fi
+
+    sleep 1
+done
+
