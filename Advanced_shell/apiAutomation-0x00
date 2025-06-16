@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Define output and error files
+OUTPUT_FILE="data.json"
+ERROR_FILE="errors.txt"
+
+# Make API request
+RESPONSE=$(curl -s -w "%{http_code}" -o "$OUTPUT_FILE" https://pokeapi.co/api/v2/pokemon/pikachu)
+
+# Check response status
+if [ "$RESPONSE" -ne 200 ]; then
+    echo "[$(date)] Error fetching Pikachu data. HTTP Status: $RESPONSE" >> "$ERROR_FILE"
+    rm -f "$OUTPUT_FILE"  # Remove partial/empty file if exists
+fi
