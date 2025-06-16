@@ -1,0 +1,27 @@
+#!/bin/bash
+
+OUTPUT_DIR="pokemon_data"
+mkdir -p "$OUTPUT_DIR"
+
+pokemon_list=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+
+echo "Starting parallel fetch..."
+
+for name in "${pokemon_list[@]}"; do
+  {
+    echo "Fetching data for $name..."
+    response=$(curl -s -w "%{http_code}" -o "$OUTPUT_DIR/$name.json" "https://pokeapi.co/api/v2/pokemon/$name")
+
+    if [ "$response" -eq 200 ]; then
+      echo "Saved data to $OUTPUT_DIR/$name.json ✅"
+    else
+      echo "Failed to fetch data for $name ❌ (HTTP $response)"
+      rm -f "$OUTPUT_DIR/$name.json"
+    fi
+  } &
+done
+
+# Wait for all background jobs to finish
+wait
+
+echo "All fetch jobs complete ✅"
